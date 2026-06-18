@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\evreyarr\\\\OneDrive - Intel Corporation\\\\PROGRAMAS\\\\Calc_Cloud\" -Filter \"*.xlsx\")",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\evreyarr\\\\OneDrive - Intel Corporation\\\\PROGRAMAS\\\\Calc_Cloud\" | ForEach-Object { $_.Name })",
+      "Bash(pip install *)",
+      "Bash(ls -la \"c:\\\\Users\\\\evreyarr\\\\OneDrive - Intel Corporation\\\\PROGRAMAS\\\\Calc_Cloud\\\\\" | grep -i \".xlsx\")",
+      "Read(//c/Users/evreyarr/OneDrive - Intel Corporation/PROGRAMAS/**)",
+      "Bash(python -c ' *)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\evreyarr\\\\OneDrive - Intel Corporation\\\\PROGRAMAS\\\\Calc_Cloud\\\\templates\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"done\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\evreyarr\\\\OneDrive - Intel Corporation\\\\PROGRAMAS\\\\Calc_Cloud\\\\templates\")",
+      "Bash(playwright install *)",
+      "Bash(python -m playwright install chromium)",
+      "PowerShell(python -m playwright install chromium 2>&1)",
+      "PowerShell(python -c \"from playwright.sync_api import sync_playwright; print\\('Playwright OK'\\); pw = sync_playwright\\(\\).start\\(\\); b = pw.chromium.launch\\(\\); b.close\\(\\); pw.stop\\(\\); print\\('Chromium OK'\\)\")"
+    ]
+  }
+}
