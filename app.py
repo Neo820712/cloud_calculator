@@ -17,7 +17,10 @@ import threading
 import pandas as pd
 from flask import Flask, request, render_template, send_file, jsonify
 
-from excel_processor import process_excel_file
+import zipfile
+from datetime import date
+
+from excel_processor import process_excel_file, xpa_filename, month_name_es
 
 # Locate the templates folder whether running as script or PyInstaller .exe
 if getattr(sys, "frozen", False):
@@ -69,6 +72,9 @@ def process():
         customer_column  = request.form.get("customer_column", "E").strip().upper()
         summarize_by     = request.form.get("summarize_by", "company").strip()
 
+        if summarize_by == "xpa" and not customer_column:
+            return jsonify({"error": "O modo Archivos XPA requer a coluna Customer configurada."}), 400
+
         job_id     = str(uuid.uuid4())
         file_bytes = file.read()
         print(f"[process] {len(file_bytes)} bytes lidos, job_id={job_id}")
@@ -81,6 +87,7 @@ def process():
                 "log":      [],
                 "result":   None,
                 "error":    None,
+                "kind":     "xlsx",
             }
 
         def worker():
@@ -92,17 +99,35 @@ def process():
                         _jobs[job_id]["log"].append(msg)
 
             try:
-                result_df = process_excel_file(
+                result = process_excel_file(
                     file_bytes, link_column, header_row, cloud_provider,
                     customer_column, summarize_by, on_progress
                 )
-                out = io.BytesIO()
-                with pd.ExcelWriter(out, engine="openpyxl") as writer:
-                    result_df.to_excel(writer, index=False, sheet_name="Instâncias")
-                out.seek(0)
-                with _jobs_lock:
-                    _jobs[job_id]["result"] = out.getvalue()
-                    _jobs[job_id]["status"] = "done"
+
+                if summarize_by == "xpa":
+                    out = io.BytesIO()
+                    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
+                        for company, df in result.items():
+                            buf = io.BytesIO()
+                            with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+                                df.to_excel(writer, index=False, header=False,
+                                            sheet_name="Instâncias")
+                            buf.seek(0)
+                            zf.writestr(xpa_filename(company, date.today()), buf.getvalue())
+                    out.seek(0)
+                    with _jobs_lock:
+                        _jobs[job_id]["result"] = out.getvalue()
+                        _jobs[job_id]["kind"]   = "zip"
+                        _jobs[job_id]["status"] = "done"
+                else:
+                    out = io.BytesIO()
+                    with pd.ExcelWriter(out, engine="openpyxl") as writer:
+                        result.to_excel(writer, index=False, sheet_name="Instâncias")
+                    out.seek(0)
+                    with _jobs_lock:
+                        _jobs[job_id]["result"] = out.getvalue()
+                        _jobs[job_id]["kind"]   = "xlsx"
+                        _jobs[job_id]["status"] = "done"
                 print(f"[worker] job {job_id} concluído.")
             except Exception as exc:
                 import traceback; traceback.print_exc()
@@ -138,6 +163,16 @@ def download(job_id):
     job = _jobs.get(job_id)
     if not job or job["status"] != "done" or not job["result"]:
         return jsonify({"error": "Resultado não disponível"}), 404
+
+    if job.get("kind") == "zip":
+        today = date.today()
+        return send_file(
+            io.BytesIO(job["result"]),
+            mimetype="application/zip",
+            as_attachment=True,
+            download_name=f"archivos_xpa_{today.year}_{month_name_es(today)}.zip",
+        )
+
     return send_file(
         io.BytesIO(job["result"]),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
