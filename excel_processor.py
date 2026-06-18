@@ -85,7 +85,7 @@ def process_excel_file(
     header_row: int,
     cloud_provider: str,
     customer_column: str = "",
-    summarize_by: str = "none",   # "none" | "company" | "total"
+    summarize_by: str = "none",   # "none" | "company" | "total" | "xpa"
     progress_cb=None,
 ) -> pd.DataFrame:
     """
@@ -97,6 +97,7 @@ def process_excel_file(
         summarize_by    : 'none' → one row per opportunity×instance
                           'company' → aggregate by (company, instance)
                           'total' → aggregate all instances across every row
+                          'xpa' → dict {empresa: DataFrame[#,Provider,Instance,Quantity]} (un archivo por empresa)
     """
     pandas_header = (header_row - 1) if header_row > 0 else None
     df = pd.read_excel(io.BytesIO(file_bytes), header=pandas_header, dtype=str)
@@ -160,6 +161,10 @@ def process_excel_file(
     # ── Summarize & build output ───────────────────────────────────────────────
     # Column order: #, Provider, Instance, Quantity, Company, Processor
     add_processor = cloud_provider.upper() == "AWS"
+
+    # ── XPA: un grupo (DataFrame) por empresa ─────────────────────────────────
+    if summarize_by == "xpa":
+        return build_xpa_groups(raw_results, cloud_provider)
 
     if not raw_results:
         cols = ["#", "Provider", "Instance", "Quantity", "Company"]
