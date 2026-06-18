@@ -43,6 +43,35 @@ def xpa_filename(company: str, d: date) -> str:
     return f"{safe_company_filename(company)}_{d.year}_{month_name_es(d)}.xlsx"
 
 
+def build_xpa_groups(raw_results: list[dict], provider: str) -> dict:
+    """Group raw results into one DataFrame per company for XPA output.
+
+    Returns {sanitized_company_base: DataFrame[#, Provider, Instance, Quantity]},
+    quantities summed per instance, instances sorted alphabetically, # restarting at 1.
+    """
+    agg: dict[tuple, int] = defaultdict(int)
+    for r in raw_results:
+        key = safe_company_filename(r["customer"])
+        agg[(key, r["instance"])] += r["count"]
+
+    by_company: dict[str, list] = defaultdict(list)
+    for (key, inst), cnt in sorted(agg.items()):
+        by_company[key].append((inst, cnt))
+
+    groups: dict = {}
+    for key, items in by_company.items():
+        rows = []
+        for counter, (inst, cnt) in enumerate(items, start=1):
+            rows.append({
+                "#":        counter,
+                "Provider": provider,
+                "Instance": inst,
+                "Quantity": cnt,
+            })
+        groups[key] = pd.DataFrame(rows, columns=["#", "Provider", "Instance", "Quantity"])
+    return groups
+
+
 def col_letter_to_index(letters: str) -> int:
     result = 0
     for ch in letters.upper():
