@@ -3,11 +3,44 @@ Read the input Excel, iterate rows with AWS Calculator links,
 fetch each estimate, then summarize the output as requested.
 """
 import io
+import re
 from collections import defaultdict
+from datetime import date
 
 import pandas as pd
 
 from aws_calculator import extract_urls, fetch_estimate_instances, classify_processor
+
+
+_SPANISH_MONTHS = {
+    1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
+    5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+    9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre",
+}
+
+_INVALID_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
+
+
+def month_name_es(d: date) -> str:
+    """Return the Spanish month name in lowercase for the given date."""
+    return _SPANISH_MONTHS[d.month]
+
+
+def safe_company_filename(company: str) -> str:
+    """Sanitize a company name for use as a filename base.
+
+    Replaces filesystem-invalid characters with '_'. Blank names become 'SinEmpresa'.
+    """
+    name = (company or "").strip()
+    if not name:
+        return "SinEmpresa"
+    name = _INVALID_FILENAME_CHARS.sub("_", name).strip()
+    return name or "SinEmpresa"
+
+
+def xpa_filename(company: str, d: date) -> str:
+    """Build the per-company XPA filename: '{base}_{year}_{month}.xlsx'."""
+    return f"{safe_company_filename(company)}_{d.year}_{month_name_es(d)}.xlsx"
 
 
 def col_letter_to_index(letters: str) -> int:
