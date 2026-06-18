@@ -10,12 +10,14 @@ def test_month_name_es_returns_lowercase_spanish():
 
 
 def test_safe_company_filename_replaces_invalid_chars():
+    # 8 invalid chars: \ / : * ? " < > |
     assert safe_company_filename('A/B:C*?"<>|D\\E') == "A_B_C______D_E"
 
 
 def test_safe_company_filename_blank_becomes_sinempresa():
     assert safe_company_filename("") == "SinEmpresa"
     assert safe_company_filename("   ") == "SinEmpresa"
+    assert safe_company_filename("///") == "SinEmpresa"
 
 
 def test_xpa_filename_format():

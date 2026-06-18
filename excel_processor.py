@@ -29,12 +29,12 @@ def month_name_es(d: date) -> str:
 def safe_company_filename(company: str) -> str:
     """Sanitize a company name for use as a filename base.
 
-    Replaces filesystem-invalid characters with '_'. Blank names become 'SinEmpresa'.
+    Replaces filesystem-invalid characters with '_'. Blank names — or names consisting only of invalid characters — become 'SinEmpresa'.
     """
     name = (company or "").strip()
     if not name:
         return "SinEmpresa"
-    name = _INVALID_FILENAME_CHARS.sub("_", name).strip()
+    name = _INVALID_FILENAME_CHARS.sub("_", name).strip("_ ")
     return name or "SinEmpresa"
 
 
@@ -87,7 +87,7 @@ def process_excel_file(
     customer_column: str = "",
     summarize_by: str = "none",   # "none" | "company" | "total" | "xpa"
     progress_cb=None,
-) -> pd.DataFrame:
+) -> "pd.DataFrame | dict":
     """
     Args:
         link_column     : column letter with calculator URLs (e.g. 'J')
