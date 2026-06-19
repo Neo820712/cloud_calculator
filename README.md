@@ -32,17 +32,20 @@ todavía no tienen lógica de obtención ni de parseo.
 5. Procesa y descarga el resultado al finalizar (un Excel, o un `.zip` si elegiste
    archivos XPA).
 
-Para desarrollo, puedes iniciar el servidor con `python app.py`.
+Para desarrollo, puedes iniciar el servidor con `python src/app.py`.
 
 ## Estructura del proyecto
 
 ```
 Calc_Cloud/
-├── app.py                 # Rutas Flask y store de trabajos en memoria
-├── excel_processor.py     # Lectura del Excel y armado del resumen
-├── aws_calculator.py      # Obtención y parseo de estimaciones de AWS
-├── templates/
-│   └── index.html         # Interfaz web de una sola página
+├── src/
+│   ├── app.py             # Rutas Flask y store de trabajos en memoria
+│   ├── excel_processor.py # Lectura del Excel y armado del resumen
+│   ├── aws_calculator.py  # Obtención y parseo de estimaciones de AWS
+│   └── templates/
+│       └── index.html     # Interfaz web de una sola página
+├── tests/                 # Pruebas automatizadas
+│   └── conftest.py        # Agrega src/ al path para las pruebas
 ├── examples/              # Archivos de entrada para verificación manual
 ├── requirements.txt       # Dependencias de Python
 ├── install.bat            # Instalación de dependencias (primera vez)

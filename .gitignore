@@ -5,6 +5,7 @@ scratch/
 # Claude / asistentes de IA
 .claude/
 CLAUDE.md
+docs/superpowers/
 
 # Datos de ejemplo
 examples/
