@@ -66,6 +66,7 @@ def test_xpa_download_returns_zip(monkeypatch):
 
     status = _wait_done(client, job_id)
     assert status["status"] == "done", status
+    assert status["kind"] == "zip"   # frontend usa esto para el botón de descarga
 
     dl = client.get(f"/download/{job_id}")
     assert dl.status_code == 200
@@ -102,7 +103,8 @@ def test_non_xpa_still_returns_xlsx(monkeypatch):
     data["excel_file"] = (io.BytesIO(b"dummy"), "in.xlsx")
     r = client.post("/process", data=data, content_type="multipart/form-data")
     job_id = r.get_json()["job_id"]
-    _wait_done(client, job_id)
+    status = _wait_done(client, job_id)
+    assert status["kind"] == "xlsx"
 
     dl = client.get(f"/download/{job_id}")
     assert dl.status_code == 200

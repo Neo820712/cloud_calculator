@@ -6,7 +6,6 @@ Routes:
   POST /process     → upload Excel + config → returns {job_id}
   GET  /status/<id> → job progress (polling)
   GET  /download/<id> → download result Excel
-  GET  /check-deps  → verify Playwright is installed
 """
 import io
 import os
@@ -40,18 +39,6 @@ _jobs_lock = threading.Lock()
 @app.route("/")
 def index():
     return render_template("index.html")
-
-
-@app.route("/check-deps")
-def check_deps():
-    try:
-        from playwright.sync_api import sync_playwright   # noqa: F401
-        print("[check-deps] Playwright OK")
-        return jsonify({"playwright": True})
-    except Exception as exc:
-        msg = f"{type(exc).__name__}: {exc}"
-        print(f"[check-deps] FALHOU — {msg}")
-        return jsonify({"playwright": False, "message": msg})
 
 
 @app.route("/process", methods=["POST"])
@@ -152,6 +139,7 @@ def status(job_id):
         "status":   job["status"],
         "progress": job["progress"],
         "total":    job["total"],
+        "kind":     job.get("kind", "xlsx"),
         "error":    job.get("error"),
         "log":      job.get("log", [])[-20:],   # last 20 lines
     })

@@ -1,230 +1,299 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloud Instance Verifier</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <title>Verificador de Instancias Cloud · Intel</title>
+  <meta name="description" content="Herramienta interna de Intel para generar los archivos del Intel Cloud Calculator (Xeon Processor Advisor) a partir de estimaciones de calculadoras de nube." />
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;rect width='32' height='32' rx='7' fill='%230068B5'/&gt;&lt;text x='16' y='23' font-size='20' text-anchor='middle' fill='white' font-family='Arial,sans-serif'&gt;i&lt;/text&gt;&lt;/svg&gt;" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
   <style>
-    :root { --aws-orange: #FF9900; --aws-dark: #232F3E; }
-    body  { background: #f4f6f8; font-family: 'Segoe UI', sans-serif; }
-
-    .navbar-brand { font-weight: 700; letter-spacing: .5px; }
-    .aws-badge    { background: var(--aws-orange); color: #fff; border-radius: 4px;
-                    padding: 2px 8px; font-size: .75rem; font-weight: 700; }
-
-    .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
-    .card-header { border-radius: 12px 12px 0 0 !important;
-                   background: var(--aws-dark); color: #fff; padding: 1rem 1.25rem; }
-
-    #dropZone {
-      border: 2px dashed #adb5bd; border-radius: 10px;
-      padding: 2.5rem 1rem; text-align: center; cursor: pointer;
-      transition: border-color .2s, background .2s;
+    :root{
+      --intel:#0068B5; --intel-dark:#004A86; --energy:#00C7FD; --intel-navy:#00285A;
+      --ink:#1B1B1B; --text:#2B2B2B; --muted:#65676B;
+      --bg:#FFFFFF; --bg-soft:#F4F6F8; --line:#E4E6E9; --line-strong:#D4D7DC;
+      --ok:#1E7E45; --err:#C0362C;
+      --sans:'Hanken Grotesk',-apple-system,'Segoe UI',sans-serif;
+      --mono:ui-monospace,'Consolas','SF Mono',monospace;
+      --shadow:0 1px 2px rgba(16,24,40,.04), 0 4px 16px rgba(16,24,40,.06);
     }
-    #dropZone.hover    { border-color: var(--aws-orange); background: #fff8ee; }
-    #dropZone.selected { border-color: #198754; background: #f0fff4; }
-    #dropZone i { font-size: 2.5rem; color: #adb5bd; }
-    #dropZone.hover i, #dropZone.selected i { color: var(--aws-orange); }
 
-    .btn-aws { background: var(--aws-orange); border: none; color: #fff; font-weight: 600; }
-    .btn-aws:hover { background: #e68800; color: #fff; }
-
-    #logArea {
-      background: #1e1e1e; color: #d4d4d4; border-radius: 8px;
-      font-family: 'Consolas', monospace; font-size: .8rem;
-      height: 180px; overflow-y: auto; padding: .75rem 1rem;
+    *{box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      margin:0; background:var(--bg-soft); color:var(--text);
+      font-family:var(--sans); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
     }
-    .log-ok  { color: #89d185; }
-    .log-err { color: #f48771; }
-    .log-inf { color: #9cdcfe; }
+    /* Barra de acento Intel arriba del todo */
+    .accent-bar{height:4px; background:linear-gradient(90deg,var(--energy),var(--intel) 60%,var(--intel-navy));}
 
-    .progress { height: 22px; border-radius: 11px; }
-    .progress-bar { border-radius: 11px; background: var(--aws-orange); font-size: .8rem; font-weight: 600; }
+    /* ── Top nav (blanco, estilo intel.com) ──────────────────── */
+    .topbar{background:var(--bg); border-bottom:1px solid var(--line);}
+    .topbar-in{max-width:1080px; margin:0 auto; padding:16px 28px; display:flex; align-items:center; gap:14px;}
+    .topbar .logo img{height:26px; display:block;}
+    .topbar .logo .fallback{font-weight:800; color:var(--intel); font-size:1.35rem; letter-spacing:-.02em;}
+    .topbar .divider{width:1px; height:24px; background:var(--line-strong);}
+    .topbar .app-name{font-weight:600; font-size:1rem; color:var(--ink);}
+    .topbar .app-name i{color:var(--intel); margin-right:7px;}
 
-    .section { display: none; }
-    .section.visible { display: block; }
+    .wrap{max-width:760px; margin:0 auto; padding:44px 28px 96px;}
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .kicker{font-size:.74rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--intel); margin-bottom:12px;}
+    h1{font-weight:800; font-size:clamp(2rem,4.6vw,2.8rem); line-height:1.08; letter-spacing:-.02em; color:var(--ink); margin:0 0 14px;}
+    .lead{font-size:1.08rem; color:var(--muted); max-width:58ch; margin:0 0 34px;}
+    .lead a{color:var(--intel); text-decoration:none; border-bottom:1px solid rgba(0,104,181,.4);}
+    .lead a:hover{border-bottom-color:var(--intel);}
+
+    /* ── Card / steps ─────────────────────────────────────────── */
+    .card{background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); padding:26px 28px; margin-bottom:20px;}
+    .step-title{display:flex; align-items:center; gap:12px; margin:0 0 4px;}
+    .badge{flex:none; width:28px; height:28px; border-radius:50%; background:var(--intel); color:#fff; font-weight:700; font-size:.9rem; display:grid; place-items:center;}
+    .step-title h2{font-size:1.15rem; font-weight:700; color:var(--ink); margin:0;}
+    .step-sub{color:var(--muted); font-size:.92rem; margin:0 0 18px; padding-left:40px;}
+
+    /* Drop zone */
+    #dropZone{
+      border:2px dashed var(--line-strong); border-radius:8px; background:var(--bg-soft);
+      padding:34px 24px; text-align:center; cursor:pointer;
+      transition:border-color .18s, background .18s;
+    }
+    #dropZone:focus-visible{outline:2px solid var(--intel); outline-offset:3px;}
+    #dropZone .dz-ico{font-size:1.8rem; color:var(--line-strong); transition:color .18s;}
+    #dropZone .dz-main{font-weight:600; font-size:1.02rem; color:var(--ink); margin:.55rem 0 .2rem;}
+    #dropZone .dz-main u{text-decoration-color:var(--intel); text-underline-offset:2px;}
+    #dropZone .dz-types{font-family:var(--mono); font-size:.78rem; color:var(--muted); letter-spacing:.04em;}
+    #dropZone.hover{border-color:var(--intel); background:#EEF7FD;}
+    #dropZone.hover .dz-ico{color:var(--intel);}
+    #dropZone.selected{border-color:var(--ok); background:#F1FAF4;}
+    #dropZone.selected .dz-ico{color:var(--ok);}
+
+    /* Fields */
+    .fields{display:grid; grid-template-columns:repeat(4,1fr); gap:18px;}
+    @media(max-width:620px){ .fields{grid-template-columns:repeat(2,1fr);} }
+    .field label{display:block; font-size:.78rem; font-weight:600; color:var(--ink); margin-bottom:7px;}
+    .field label i{color:var(--muted); margin-left:5px;}
+    .field input, .field select{
+      width:100%; border:1px solid var(--line-strong); border-radius:6px; background:var(--bg);
+      padding:10px 12px; font-family:var(--mono); font-size:.98rem; color:var(--ink);
+      transition:border-color .15s, box-shadow .15s;
+    }
+    .field select{font-family:var(--sans);}
+    .field input:focus, .field select:focus{outline:0; border-color:var(--intel); box-shadow:0 0 0 3px rgba(0,104,181,.15);}
+    .field .hint{font-size:.76rem; color:var(--muted); margin-top:7px;}
+
+    /* Output options */
+    .opts{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+    @media(max-width:620px){ .opts{grid-template-columns:1fr;} }
+    .opt-input{position:absolute; opacity:0; pointer-events:none;}
+    .opt{display:block; border:1px solid var(--line-strong); border-radius:8px; background:var(--bg); padding:15px 15px; cursor:pointer; height:100%; transition:border-color .15s, box-shadow .15s, background .15s;}
+    .opt:hover{border-color:var(--intel);}
+    .opt .opt-t{display:flex; align-items:center; gap:8px; font-weight:700; font-size:1rem; color:var(--ink);}
+    .opt .opt-t i{color:var(--muted); font-size:.9rem;}
+    .opt .opt-d{display:block; font-size:.82rem; color:var(--muted); margin-top:6px;}
+    .opt-input:checked + .opt{border-color:var(--intel); background:#F2F9FE; box-shadow:0 0 0 1px var(--intel);}
+    .opt-input:checked + .opt .opt-t i{color:var(--intel);}
+    .opt-input:focus-visible + .opt{outline:2px solid var(--intel); outline-offset:2px;}
+
+    /* Buttons */
+    .btn{font-family:var(--sans); font-weight:600; font-size:1rem; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:10px; border:1px solid transparent; transition:background .16s, border-color .16s, box-shadow .16s, transform .16s;}
+    .btn-primary{background:var(--intel); color:#fff; padding:13px 28px;}
+    .btn-primary .arr{transition:transform .2s;}
+    .btn-primary:hover:not(:disabled){background:var(--intel-dark); box-shadow:0 6px 18px rgba(0,74,134,.22);}
+    .btn-primary:hover:not(:disabled) .arr{transform:translateX(4px);}
+    .btn-primary:disabled{background:var(--line-strong); color:#fff; cursor:not-allowed;}
+    .btn-ghost{background:var(--bg); color:var(--ink); border-color:var(--line-strong); padding:12px 22px;}
+    .btn-ghost:hover{border-color:var(--intel); color:var(--intel);}
+    .btn-lg{padding:14px 30px; font-size:1.05rem;}
+    .btn-block{width:100%; justify-content:center;}
+
+    .action{display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:20px;}
+    .note{color:var(--err); font-size:.9rem;}
+    .note.hidden{display:none;}
+
+    /* States */
+    .state{display:none;}
+    .state.visible{display:block; animation:fade .35s ease forwards;}
+    .state-kicker{font-size:.74rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--intel);}
+    .state-kicker.ok{color:var(--ok);} .state-kicker.err{color:var(--err);}
+    .state-head{font-size:1.35rem; font-weight:800; color:var(--ink); letter-spacing:-.01em; margin:.25em 0 .6em;}
+
+    .track{height:8px; background:var(--line); border-radius:6px; overflow:hidden;}
+    #progressBar{height:100%; width:0; background:linear-gradient(90deg,var(--intel),var(--energy)); transition:width .4s ease;}
+    .track-meta{display:flex; justify-content:space-between; font-family:var(--mono); font-size:.8rem; color:var(--muted); margin:10px 0 16px;}
+
+    #logArea{background:#12151B; color:#D7DAE0; border-radius:8px; font-family:var(--mono); font-size:.78rem; line-height:1.5; height:180px; overflow-y:auto; padding:14px 16px;}
+    .log-ok{color:#7BD88F;} .log-err{color:#F2877B;} .log-inf{color:#7CC7F2;}
+
+    #errorMsg{font-family:var(--mono); font-size:.85rem; color:var(--err); white-space:pre-wrap; background:#FCF3F2; border:1px solid #EFD4D1; border-radius:8px; padding:14px 16px; margin:0 0 18px;}
+
+    .foot{color:var(--muted); font-size:.8rem; text-align:center; margin-top:36px;}
+
+    @keyframes fade{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+    .reveal{opacity:0; animation:fade .55s ease forwards;}
+    @media(prefers-reduced-motion:reduce){ .reveal,.state.visible{animation:none; opacity:1;} *{transition:none !important;} }
   </style>
 </head>
 <body>
+  <div class="accent-bar"></div>
 
-<nav class="navbar" style="background:var(--aws-dark);">
-  <div class="container-fluid px-4">
-    <span class="navbar-brand text-white">
-      <i class="fab fa-aws me-2" style="color:var(--aws-orange);font-size:1.4rem;"></i>
-      Cloud Instance Verifier
-    </span>
-    <span class="aws-badge">Intel × AWS</span>
-  </div>
-</nav>
-
-<div class="container py-4" style="max-width:760px;">
-
-  <!-- Dependency warning -->
-  <div id="depWarning" class="alert alert-warning mb-3" role="alert" style="display:none">
-    <i class="fas fa-triangle-exclamation me-2 mt-1"></i>
-    <div>
-      <strong>Playwright is not available.</strong><br/>
-      Run in terminal: <code>python -m playwright install chromium</code><br/>
-      <small id="depDetail" class="text-muted"></small>
+  <nav class="topbar">
+    <div class="topbar-in">
+      <span class="logo">
+        <img src="https://cdn.simpleicons.org/intel/0068B5" alt="Intel"
+             onerror="this.outerHTML='&lt;span class=\'fallback\'&gt;intel&lt;/span&gt;'" />
+      </span>
+      <span class="divider"></span>
+      <span class="app-name"><i class="fas fa-microchip"></i>Cloud Instance Verifier</span>
     </div>
-  </div>
+  </nav>
 
-  <!-- Main card -->
-  <div class="card mb-4">
-    <div class="card-header d-flex align-items-center gap-2">
-      <i class="fas fa-magnifying-glass-chart"></i>
-      <span>Verify Cloud Instances</span>
-    </div>
-    <div class="card-body p-4">
+  <div class="wrap">
 
-      <!-- Drop zone -->
-      <label class="form-label fw-semibold">1. Input Excel file</label>
-      <div id="dropZone">
-        <i class="fas fa-file-excel d-block mb-2"></i>
-        <div id="dropLabel">Drag file here or <u>click to select</u></div>
-        <small class="text-muted">.xlsx / .xls</small>
-        <input type="file" id="fileInput" accept=".xlsx,.xls" class="d-none" />
+    <header class="reveal" style="animation-delay:.02s">
+      <div class="kicker">Herramienta interna</div>
+      <h1>Verificador de Instancias Cloud</h1>
+      <p class="lead">Sube tu Excel con enlaces de estimaciones de calculadoras de nube y obtén
+        los archivos listos para cargar en el
+        <a href="https://xeonprocessoradvisor.intel.com/cloud-calculator" target="_blank" rel="noopener">Intel Cloud Calculator</a>
+        (Xeon Processor Advisor). La obtención y el conteo de instancias corren en segundo plano.</p>
+    </header>
+
+    <main>
+      <!-- 01 -->
+      <section class="card reveal" style="animation-delay:.08s">
+        <div class="step-title"><span class="badge">1</span><h2>Archivo de entrada</h2></div>
+        <p class="step-sub">El libro de Excel con los enlaces de estimación.</p>
+        <div id="dropZone" role="button" tabindex="0"
+             aria-label="Seleccionar archivo Excel; arrastra y suelta o presiona Enter">
+          <i class="fas fa-arrow-up-from-bracket dz-ico"></i>
+          <div class="dz-main" id="dropLabel">Arrastra el archivo o <u>haz clic para elegir</u></div>
+          <div class="dz-types">.xlsx · .xls</div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" hidden />
+        </div>
+      </section>
+
+      <!-- 02 -->
+      <section class="card reveal" style="animation-delay:.14s">
+        <div class="step-title"><span class="badge">2</span><h2>Configuración de columnas</h2></div>
+        <p class="step-sub">Indica dónde están los datos dentro del Excel.</p>
+        <div class="fields">
+          <div class="field">
+            <label>Enlaces <i class="fas fa-link fa-xs"></i></label>
+            <input type="text" id="linkColumn" value="J" maxlength="3" placeholder="J" />
+            <div class="hint">Columna de URLs</div>
+          </div>
+          <div class="field">
+            <label>Cliente <i class="fas fa-building fa-xs"></i></label>
+            <input type="text" id="customerColumn" value="E" maxlength="3" placeholder="E" />
+            <div class="hint">Nombre de empresa</div>
+          </div>
+          <div class="field">
+            <label>Encabezado <i class="fas fa-table-cells fa-xs"></i></label>
+            <input type="number" id="headerRow" value="6" min="0" />
+            <div class="hint">0 = sin · 6 = ejemplos</div>
+          </div>
+          <div class="field">
+            <label>Proveedor <i class="fas fa-cloud fa-xs"></i></label>
+            <select id="cloudProvider">
+              <option value="AWS" selected>AWS</option>
+              <option value="Azure">Azure</option>
+              <option value="GCP">GCP</option>
+            </select>
+            <div class="hint">AWS disponible</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 -->
+      <section class="card reveal" style="animation-delay:.2s">
+        <div class="step-title"><span class="badge">3</span><h2>Tipo de salida</h2></div>
+        <p class="step-sub">Cómo quieres el resultado.</p>
+        <div class="opts">
+          <input type="radio" class="opt-input" name="summarize" id="sumCompany" value="company" checked />
+          <label class="opt" for="sumCompany">
+            <span class="opt-t"><i class="fas fa-users"></i>Por empresa</span>
+            <span class="opt-d">Un Excel con una fila por empresa e instancia.</span>
+          </label>
+
+          <input type="radio" class="opt-input" name="summarize" id="sumXpa" value="xpa" />
+          <label class="opt" for="sumXpa">
+            <span class="opt-t"><i class="fas fa-file-zipper"></i>Archivos XPA</span>
+            <span class="opt-d">Un .xlsx por empresa para el Intel Cloud Calculator, en un .zip. Solo instancias Intel.</span>
+          </label>
+
+          <input type="radio" class="opt-input" name="summarize" id="sumNone" value="none" />
+          <label class="opt" for="sumNone">
+            <span class="opt-t"><i class="fas fa-list-ul"></i>Detallado</span>
+            <span class="opt-d">Una fila por cada aparición, sin agrupar.</span>
+          </label>
+        </div>
+      </section>
+
+      <div class="action reveal" style="animation-delay:.26s">
+        <button id="processBtn" class="btn btn-primary btn-lg" disabled>
+          Procesar <i class="fas fa-arrow-right arr"></i>
+        </button>
+        <span id="processNote" class="note hidden">Selecciona primero un archivo Excel.</span>
       </div>
 
-      <hr class="my-4"/>
+      <!-- Progreso -->
+      <section id="progressCard" class="state card">
+        <div class="state-kicker">En proceso</div>
+        <h2 class="state-head">Procesando estimaciones…</h2>
+        <div class="track"><div id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>
+        <div class="track-meta"><span id="progressLabel" aria-live="polite">Iniciando…</span><span id="progressPct">0%</span></div>
+        <div id="logArea" aria-live="polite"></div>
+      </section>
 
-      <!-- Column config -->
-      <label class="form-label fw-semibold">2. Column configuration</label>
-      <div class="row g-3 mb-3">
-        <div class="col-sm-3">
-          <label class="form-label small text-muted">Links column <i class="fas fa-link fa-xs"></i></label>
-          <input type="text" id="linkColumn" class="form-control" value="J" maxlength="3"
-                 placeholder="e.g. H, J, K" />
-          <div class="form-text">AWS Calculator link column</div>
+      <!-- Resultado -->
+      <section id="resultCard" class="state card">
+        <div class="state-kicker ok">Completado</div>
+        <h2 class="state-head">Listo.</h2>
+        <p id="resultSummary" class="lead" style="margin-bottom:22px"></p>
+        <div class="action" style="margin:0;">
+          <a id="downloadBtn" href="#" class="btn btn-primary"><i class="fas fa-file-arrow-down"></i>Descargar</a>
+          <button class="btn btn-ghost" onclick="resetForm()"><i class="fas fa-arrow-rotate-left"></i>Nueva consulta</button>
         </div>
-        <div class="col-sm-3">
-          <label class="form-label small text-muted">Customer column <i class="fas fa-building fa-xs"></i></label>
-          <input type="text" id="customerColumn" class="form-control" value="E" maxlength="3"
-                 placeholder="e.g. E, D" />
-          <div class="form-text">Company / customer name</div>
-        </div>
-        <div class="col-sm-3">
-          <label class="form-label small text-muted">Header row <i class="fas fa-table-list fa-xs"></i></label>
-          <input type="number" id="headerRow" class="form-control" value="6" min="0" />
-          <div class="form-text">0 = no header | 6 = sample files</div>
-        </div>
-        <div class="col-sm-3">
-          <label class="form-label small text-muted">Cloud provider <i class="fab fa-aws fa-xs"></i></label>
-          <select id="cloudProvider" class="form-select">
-            <option value="AWS" selected>AWS</option>
-            <option value="Azure">Azure</option>
-            <option value="GCP">GCP</option>
-          </select>
-        </div>
-      </div>
+      </section>
 
-      <!-- Output type toggle -->
-      <label class="form-label fw-semibold">3. Output type</label>
-      <div class="d-flex gap-2 mb-4">
-        <input type="radio" class="btn-check" name="summarize" id="sumCompany" value="company" checked />
-        <label class="btn btn-outline-secondary" for="sumCompany">
-          <i class="fas fa-users me-1"></i>By company
-        </label>
+      <!-- Error -->
+      <section id="errorCard" class="state card">
+        <div class="state-kicker err">Error</div>
+        <h2 class="state-head">Algo salió mal.</h2>
+        <pre id="errorMsg"></pre>
+        <button class="btn btn-ghost" onclick="resetForm()"><i class="fas fa-arrow-rotate-left"></i>Intentar de nuevo</button>
+      </section>
+    </main>
 
-        <input type="radio" class="btn-check" name="summarize" id="sumXpa" value="xpa" />
-        <label class="btn btn-outline-secondary" for="sumXpa">
-          <i class="fas fa-file-zipper me-1"></i>Archivos XPA
-        </label>
-
-        <input type="radio" class="btn-check" name="summarize" id="sumNone" value="none" />
-        <label class="btn btn-outline-secondary" for="sumNone">
-          <i class="fas fa-list me-1"></i>Detailed
-        </label>
-      </div>
-
-      <button id="processBtn" class="btn btn-aws btn-lg w-100" disabled>
-        <i class="fas fa-gears me-2"></i>Process
-      </button>
-    </div>
+    <p class="foot">Procesamiento local · almacenamiento en memoria (un solo usuario) · reiniciar el servidor descarta los trabajos en curso.</p>
   </div>
 
-  <!-- Progress card -->
-  <div id="progressCard" class="card mb-4 section">
-    <div class="card-header">
-      <i class="fas fa-spinner fa-spin me-2"></i>Processing…
-    </div>
-    <div class="card-body p-4">
-      <div class="d-flex justify-content-between small text-muted mb-1">
-        <span id="progressLabel">Starting…</span>
-        <span id="progressPct">0%</span>
-      </div>
-      <div class="progress mb-3">
-        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
-             role="progressbar" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-        </div>
-      </div>
-      <div id="logArea"></div>
-    </div>
-  </div>
-
-  <!-- Result card -->
-  <div id="resultCard" class="card mb-4 section">
-    <div class="card-header" style="background:#198754;">
-      <i class="fas fa-circle-check me-2"></i>Processing complete
-    </div>
-    <div class="card-body p-4 text-center">
-      <p class="text-muted mb-3" id="resultSummary"></p>
-      <a id="downloadBtn" href="#" class="btn btn-success btn-lg px-5">
-        <i class="fas fa-file-arrow-down me-2"></i>Download result Excel
-      </a>
-      <button class="btn btn-outline-secondary btn-lg ms-3" onclick="resetForm()">
-        <i class="fas fa-rotate-left me-2"></i>New query
-      </button>
-    </div>
-  </div>
-
-  <!-- Error card -->
-  <div id="errorCard" class="card mb-4 section border-danger">
-    <div class="card-header bg-danger text-white">
-      <i class="fas fa-circle-xmark me-2"></i>Error
-    </div>
-    <div class="card-body p-4">
-      <pre id="errorMsg" class="mb-0 text-danger" style="white-space:pre-wrap;"></pre>
-      <button class="btn btn-outline-secondary mt-3" onclick="resetForm()">
-        <i class="fas fa-rotate-left me-2"></i>Try again
-      </button>
-    </div>
-  </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 let currentJobId = null;
 let pollTimer    = null;
 let lastLogCount = 0;
 
-const dropZone    = document.getElementById('dropZone');
-const fileInput   = document.getElementById('fileInput');
-const processBtn  = document.getElementById('processBtn');
+const dropZone     = document.getElementById('dropZone');
+const fileInput    = document.getElementById('fileInput');
+const processBtn   = document.getElementById('processBtn');
+const processNote  = document.getElementById('processNote');
 const progressCard = document.getElementById('progressCard');
-const resultCard  = document.getElementById('resultCard');
-const errorCard   = document.getElementById('errorCard');
-const logArea     = document.getElementById('logArea');
-const progressBar = document.getElementById('progressBar');
+const resultCard   = document.getElementById('resultCard');
+const errorCard    = document.getElementById('errorCard');
+const logArea      = document.getElementById('logArea');
+const progressBar  = document.getElementById('progressBar');
 
-/* Dependency check */
-window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const r = await fetch('/check-deps');
-    const d = await r.json();
-    if (!d.playwright) {
-      const w = document.getElementById('depWarning');
-      w.style.display = 'flex';
-      if (d.message) document.getElementById('depDetail').textContent = 'Detail: ' + d.message;
-    }
-  } catch (e) {}
-});
-
-/* Drag & drop */
+/* Drop zone: clic, teclado y arrastrar-soltar */
 dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+});
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
 dropZone.addEventListener('drop', e => {
@@ -236,13 +305,14 @@ fileInput.addEventListener('change', () => { if (fileInput.files.length) setFile
 
 function setFile(file) {
   dropZone.classList.add('selected');
-  document.getElementById('dropLabel').textContent = `📂 ${file.name}`;
+  document.getElementById('dropLabel').textContent = file.name;
   processBtn.disabled = false;
+  processNote.classList.add('hidden');
 }
 
-/* Process */
+/* Procesar */
 processBtn.addEventListener('click', async () => {
-  if (!fileInput.files[0]) { alert('Please select an Excel file first.'); return; }
+  if (!fileInput.files[0]) { processNote.classList.remove('hidden'); return; }
 
   hideAll();
   show(progressCard);
@@ -265,11 +335,11 @@ processBtn.addEventListener('click', async () => {
     currentJobId = d.job_id;
     startPolling();
   } catch (e) {
-    showError('Network error: ' + e.message);
+    showError('Error de red: ' + e.message);
   }
 });
 
-/* Polling */
+/* Sondeo */
 function startPolling() { pollTimer = setInterval(poll, 1500); }
 
 async function poll() {
@@ -278,8 +348,8 @@ async function poll() {
     const d = await r.json();
     updateProgress(d.progress, d.total);
     appendLogs(d.log || []);
-    if (d.status === 'done')  { clearInterval(pollTimer); showResult(d.progress); }
-    if (d.status === 'error') { clearInterval(pollTimer); showError(d.error || 'Unknown error'); }
+    if (d.status === 'done')  { clearInterval(pollTimer); showResult(d.progress, d.kind); }
+    if (d.status === 'error') { clearInterval(pollTimer); showError(d.error || 'Error desconocido'); }
   } catch (_) {}
 }
 
@@ -289,7 +359,7 @@ function updateProgress(cur, total) {
   progressBar.setAttribute('aria-valuenow', pct);
   document.getElementById('progressPct').textContent = pct + '%';
   document.getElementById('progressLabel').textContent =
-    total > 0 ? `${cur} / ${total} rows processed` : 'Starting…';
+    total > 0 ? `${cur} / ${total} filas procesadas` : 'Iniciando…';
 }
 
 function appendLogs(lines) {
@@ -306,12 +376,16 @@ function appendLogs(lines) {
   logArea.scrollTop = logArea.scrollHeight;
 }
 
-function showResult(rowCount) {
+function showResult(rowCount, kind) {
   hideAll();
   show(resultCard);
   document.getElementById('resultSummary').textContent =
-    `${rowCount} rows processed successfully.`;
-  document.getElementById('downloadBtn').href = `/download/${currentJobId}`;
+    `${rowCount} filas procesadas correctamente.`;
+  const btn = document.getElementById('downloadBtn');
+  btn.href = `/download/${currentJobId}`;
+  btn.innerHTML = (kind === 'zip')
+    ? '<i class="fas fa-file-zipper"></i>Descargar ZIP'
+    : '<i class="fas fa-file-excel"></i>Descargar Excel';
   processBtn.disabled = false;
 }
 
@@ -329,8 +403,9 @@ function resetForm() {
   hideAll();
   fileInput.value = '';
   dropZone.classList.remove('selected', 'hover');
-  document.getElementById('dropLabel').innerHTML = 'Drag file here or <u>click to select</u>';
+  document.getElementById('dropLabel').innerHTML = 'Arrastra el archivo o <u>haz clic para elegir</u>';
   processBtn.disabled = true;
+  processNote.classList.add('hidden');
   currentJobId = null;
   lastLogCount = 0;
 }

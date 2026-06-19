@@ -1,2 +1,10 @@
 __pycache__/
 *.pyc
+scratch/
+
+# Claude / asistentes de IA
+.claude/
+CLAUDE.md
+
+# Datos de ejemplo
+examples/

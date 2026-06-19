@@ -27,8 +27,10 @@ todavía no tienen lógica de obtención ni de parseo.
    - Columna de enlaces: letra de la columna con las URLs de la calculadora.
    - Columna de cliente: letra de la columna con el nombre de empresa o cliente.
    - Fila de encabezado: número de fila donde están los títulos (normalmente 6).
-4. Elige el tipo de resumen: por empresa, total general o detallado.
-5. Procesa y descarga el Excel de resultado al finalizar.
+4. Elige el tipo de salida: por empresa, detallado o archivos XPA (un `.xlsx` por
+   empresa, comprimidos en un `.zip`; solo incluye instancias Intel).
+5. Procesa y descarga el resultado al finalizar (un Excel, o un `.zip` si elegiste
+   archivos XPA).
 
 Para desarrollo, puedes iniciar el servidor con `python app.py`.
 
@@ -41,11 +43,10 @@ Calc_Cloud/
 ├── aws_calculator.py      # Obtención y parseo de estimaciones de AWS
 ├── templates/
 │   └── index.html         # Interfaz web de una sola página
-├── ejemplos/              # Archivos de entrada para verificación manual
+├── examples/              # Archivos de entrada para verificación manual
 ├── requirements.txt       # Dependencias de Python
 ├── install.bat            # Instalación de dependencias (primera vez)
 ├── run.bat                # Inicia el servidor y abre el navegador
-├── INSTALL.txt            # Guía de instalación para el usuario final
 ├── README.md              # Este archivo
 └── CLAUDE.md              # Notas de trabajo para asistentes de IA
 ```
@@ -65,5 +66,3 @@ usuario: reiniciar el servidor pierde los trabajos en curso.
 ## Limitaciones conocidas
 
 - Solo AWS está implementado; el selector de proveedor aún no habilita Azure ni GCP.
-- `install.bat` y `requirements.txt` instalan Playwright y Chromium por compatibilidad
-  histórica, pero la obtención de estimaciones ya no los usa.

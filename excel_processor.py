@@ -48,9 +48,13 @@ def build_xpa_groups(raw_results: list[dict], provider: str) -> dict:
 
     Returns {sanitized_company_base: DataFrame[#, Provider, Instance, Quantity]},
     quantities summed per instance, instances sorted alphabetically, # restarting at 1.
+    Only Intel instances are included; AMD and Graviton instances are excluded,
+    and a company with no Intel instances produces no file.
     """
     agg: dict[tuple, int] = defaultdict(int)
     for r in raw_results:
+        if classify_processor(r["instance"]) != "Intel":
+            continue
         key = safe_company_filename(r["customer"])
         agg[(key, r["instance"])] += r["count"]
 

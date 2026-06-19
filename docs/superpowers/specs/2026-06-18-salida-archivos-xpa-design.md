@@ -43,6 +43,9 @@ Tras el cambio, los tipos de salida son: **By company**, **Detailed**, **Archivo
   - **Agrupado:** las cantidades se **suman por tipo de instancia** dentro de cada empresa
     (misma lógica que "By company", pero separado por empresa y sin la columna `Company`
     ni la columna `Processor`).
+  - **Solo Intel:** únicamente se incluyen instancias clasificadas como **Intel**
+    (vía `classify_processor`); las instancias AMD y Graviton se excluyen. Una empresa
+    sin ninguna instancia Intel **no genera archivo**.
   - Orden de filas dentro del archivo: por tipo de instancia (orden alfabético), consistente con el modo "By company".
 
 ### Reglas de borde
