@@ -16,6 +16,16 @@ Está pensada como multinube (tres proveedores), pero actualmente solo **AWS est
 implementado y funcional**. La interfaz incluye un selector de proveedor; Azure y GCP
 todavía no tienen lógica de obtención ni de parseo.
 
+## Índice
+
+- [Interfaz](#interfaz)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Cómo funciona](#cómo-funciona)
+- [Limitaciones conocidas](#limitaciones-conocidas)
+
 ## Interfaz
 
 ![Interfaz de Calc_Cloud](docs/images/interfaz.png)
@@ -23,6 +33,8 @@ todavía no tienen lógica de obtención ni de parseo.
 ## Requisitos
 
 - Python 3.10 o superior. Durante la instalación, marca la opción "Add Python to PATH".
+- Dependencias de Python (se instalan con `install.bat`): Flask, pandas, openpyxl, xlrd
+  y requests. Versiones exactas en `requirements.txt`.
 
 ## Instalación
 
