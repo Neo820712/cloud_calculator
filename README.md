@@ -1,5 +1,12 @@
 # Calc_Cloud — Verificador multinube de instancias
 
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0%2B-000000?logo=flask&logoColor=white)
+![pandas](https://img.shields.io/badge/pandas-2.0%2B-150458?logo=pandas&logoColor=white)
+![openpyxl](https://img.shields.io/badge/openpyxl-3.1%2B-1D6F42?logo=microsoftexcel&logoColor=white)
+![Requests](https://img.shields.io/badge/Requests-2.31%2B-FF5733?logo=python&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-implementado-FF9900?logo=amazonwebservices&logoColor=white)
+
 Aplicación web local que procesa un archivo Excel con enlaces a calculadoras de precios
 de nube. Por cada enlace obtiene la estimación, extrae los tipos de instancia con sus
 cantidades, clasifica el procesador (Intel / AMD / Graviton) y exporta un Excel
@@ -8,6 +15,10 @@ resumido.
 Está pensada como multinube (tres proveedores), pero actualmente solo **AWS está
 implementado y funcional**. La interfaz incluye un selector de proveedor; Azure y GCP
 todavía no tienen lógica de obtención ni de parseo.
+
+## Interfaz
+
+![Interfaz de Calc_Cloud](docs/images/interfaz.png)
 
 ## Requisitos
 
@@ -46,6 +57,8 @@ Calc_Cloud/
 │       └── index.html     # Interfaz web de una sola página
 ├── tests/                 # Pruebas automatizadas
 │   └── conftest.py        # Agrega src/ al path para las pruebas
+├── docs/                  # Documentación
+│   └── images/            # Capturas de la interfaz para el README
 ├── examples/              # Archivos de entrada para verificación manual
 ├── requirements.txt       # Dependencias de Python
 ├── install.bat            # Instalación de dependencias (primera vez)
